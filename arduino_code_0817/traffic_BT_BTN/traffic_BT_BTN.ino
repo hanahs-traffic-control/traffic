@@ -26,6 +26,7 @@ void setup() {
   pinMode(GREEN_LED_PIN, OUTPUT);
   
   analogWrite(RED_LED_PIN, RED_PWM);
+  bt.begin(9600);
   Serial.begin(9600);
 }
 
@@ -35,21 +36,32 @@ void redLight() {
   delay(1000);
   analogWrite(YELLOW_LED_PIN, 0);
   analogWrite(RED_LED_PIN, RED_PWM);
-  currentIsRed = 1;
+  currentIsRed = true;
 }
 
 void greenLight() {
   analogWrite(RED_LED_PIN, 0);
   analogWrite(GREEN_LED_PIN, GREEN_PWM);
-  currentIsRed = 0;
+  currentIsRed = false;
 }
 
 void loop() {
   int currentRedButtonState = digitalRead(RED_BUTTON_PIN);
   int currentGreenButtonState = digitalRead(GREEN_BUTTON_PIN);
+  
+  if (bt.available()) {
+    char cmd = bt.read();
+    if (cmd == 'r' && !currentIsRed) redLight();
+    else if (cmd == 'g' && currentIsRed) greenLight();
+    else {
+      Serial.print("Invalid command: ");
+      Serial.println(cmd);
+    }
+  }
 
   if (currentIsRed == 0 && currentRedButtonState == 0) redLight();
   
   if (currentIsRed == 1 && currentGreenButtonState == 0) greenLight();
+  
   delay(10);
 }
